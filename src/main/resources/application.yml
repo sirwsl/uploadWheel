@@ -1,0 +1,50 @@
+server:
+  port: 8080
+
+minio:
+  url: #http://
+  access: #admin
+  secret: #admin
+
+#m3u8视频转换配置
+m3u8:
+  convertor:
+    base-path: /file/m3u8/
+    temp-path: /file/temp/
+    big-path: /file/big/
+    proxy: m3u8/
+
+ali:
+  oss:
+    end-point:
+    access-key-id:
+    access-key-secret:
+    bucket-name: websources
+    url:
+    ali-url:
+    get-file-url: ${aliyun.oss.url}${aliyun.oss.fileDir}
+    my-host-url:
+
+# 应用名称
+spring:
+  application:
+    name: minioDemo
+  servlet:
+    multipart:
+      max-file-size: 2048MB
+      max-request-size: 2048MB
+  resources:
+    static-locations: classpath:static/
+  thymeleaf:
+    cache: false
+    check-template: true # 检查模板是否存在，然后再呈现
+    check-template-location: true # 检查模板位置是否正确（默认值 :true ）
+    enabled: true # 开启 MVC Thymeleaf 视图解析（默认值： true ）
+    encoding: UTF-8 # 模板编码
+    excluded-view-names: # 要被排除在解析之外的视图名称列表，⽤逗号分隔
+    mode: HTML5 # 要运⽤于模板之上的模板模式。另⻅ StandardTemplate-ModeHandlers( 默认值： HTML5)
+    prefix: classpath:/templates/ # 在构建 URL 时添加到视图名称前的前缀（默认值： classpath:/templates/ ）
+    suffix: .html # 在构建 URL 时添加到视图名称后的后缀（默认值： .html ）
+    servlet:
+      content-type: text/html #Content-Type 的值（默认值： text/html ）
+
