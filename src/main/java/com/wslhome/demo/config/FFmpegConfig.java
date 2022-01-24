@@ -19,7 +19,12 @@ public class FFmpegConfig {
     @SneakyThrows
     @Bean
     public FFmpeg fFmpeg() {
-        String path = System.getProperty("user.dir")+"/ffmpeg/bin/ffmpeg.exe";
+        String path = System.getProperty("user.dir");
+        if (isLinux()){
+            path+="ffmpeg/ffmpeg";
+        }else if (isWindows()){
+            path+="/ffmpeg-win/ffmpeg/bin/ffmpeg.exe";
+        }
         log.info("ffmpeg.exe 路径为{}",path);
         return new FFmpeg(path);
     }
@@ -27,9 +32,22 @@ public class FFmpegConfig {
     @SneakyThrows
     @Bean
     public FFprobe fFprobe() {
-        String path = System.getProperty("user.dir")+"/ffmpeg/bin/ffprobe.exe";
+        String path = System.getProperty("user.dir");
+        if (isLinux()){
+            path+="ffmpeg/ffprobe";
+        }else if (isWindows()){
+            path+="/ffmpeg-win/ffmpeg/bin/ffprobe.exe";
+        }
         log.info("ffprobe.exe 路径为{}",path);
         return new FFprobe(path);
     }
+    public static boolean isLinux() {
+        return System.getProperty("os.name").toLowerCase().contains("linux");
+    }
+
+    public static boolean isWindows() {
+        return System.getProperty("os.name").toLowerCase().contains("windows");
+    }
+
 
 }

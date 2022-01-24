@@ -6,7 +6,7 @@ MAINTAINER wangshilei <sirwsl@163.com>
 VOLUME /tmp
 
 COPY target/uploadWheel-1.jar upload-wheel.jar
-
+COPY ffmpeg-linux/ffmpeg  /ffmpeg
 RUN bash -c "touch /upload-wheel.jar" &&\
   cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime &&\
   echo "Asia/Shanghai" >> /etc/timezone
