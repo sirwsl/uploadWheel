@@ -1,7 +1,6 @@
 package com.wslhome.demo.service;
 
 import cn.hutool.core.date.DateUtil;
-import com.wslhome.demo.api.Result;
 import com.wslhome.demo.component.M3u8Component;
 import com.wslhome.demo.component.MinioComponent;
 import com.wslhome.demo.component.OssComponent;
@@ -13,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -213,6 +211,7 @@ public class FileService {
         String path = "";
        if (StringUtils.isNotBlank(localPath)){
            try {
+               log.info("正在上传至OSS");
                path = ossComponent.uploadSlice(fileName, localPath,"file/bigfile/");
            }catch (Exception e){
                log.error("OSS切片上传失败！");
@@ -221,7 +220,7 @@ public class FileService {
        }
         //移除文件
         poolTaskExecutor.execute(() -> {
-            FileUtil.deleteFile(projectUrl+filePath.getBigPath());
+            FileUtil.deleteFiles(projectUrl+filePath.getBigPath());
         });
         return path;
     }

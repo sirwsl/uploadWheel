@@ -54,4 +54,19 @@
 |/uploadVideoMerge|POST|guid、fileName|切片id+视频文件名|
 
 
+### Socket视频切片上传转m3u8
+1、视频文件前端切片
+
+2、创建socket连接
+
+3、发送切片文件，并合并
+
+4、且片后多线程上传至MinIO or OSS
+
+|接口|请求方式|参数|说明|
+|----|----|----|----|
+|/file/{guid}'|ws|file、guid、chunk|切片文件+随机id+切片数|
+
+
+
 

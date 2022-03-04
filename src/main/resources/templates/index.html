@@ -4,9 +4,12 @@
 
     <meta charset="UTF-8">
     <title></title>
-    <link href="https://unpkg.com/video.js/dist/video-js.css" th:href="@{https://unpkg.com/video.js/dist/video-js.css}" rel="stylesheet">
-    <script src="https://unpkg.com/video.js/dist/video.js" th:src="@{https://unpkg.com/video.js/dist/video.js}"></script>
-    <script src="https://unpkg.com/videojs-contrib-hls/dist/videojs-contrib-hls.js" th:src="@{https://unpkg.com/videojs-contrib-hls/dist/videojs-contrib-hls.js}"></script>
+    <link href="https://unpkg.com/video.js/dist/video-js.css" th:href="@{https://unpkg.com/video.js/dist/video-js.css}"
+          rel="stylesheet">
+    <script src="https://unpkg.com/video.js/dist/video.js"
+            th:src="@{https://unpkg.com/video.js/dist/video.js}"></script>
+    <script src="https://unpkg.com/videojs-contrib-hls/dist/videojs-contrib-hls.js"
+            th:src="@{https://unpkg.com/videojs-contrib-hls/dist/videojs-contrib-hls.js}"></script>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <style type="text/css">
         #red {
@@ -53,22 +56,26 @@
 <div style=" position: absolute;left: 50%;top: 50%;transform: translate(-50%,-50%);">
     <div id="red">
         <div style="width:350px;height:100px;text-align:center"><h4>普通文件上传至OSS或MinIOn</h4></div>
-        <input id = "uploadFile" class="all" type="file" name="uploadFile"/></br>
+        <input id="uploadFile" class="all" type="file" name="uploadFile"/></br>
         <input type="submit" value="上传" onclick="upload()"/>
         <div id="detail1" style="text-align:center"></div>
     </div>
     <div id="blue">
         <div style="width:350px;height:100px;text-align:center"><h4>大文件切片上传至OSS或MINIO</h4></div>
-        <input id ="uploadBigFile"  class="all" type="file" name="uploadBigFile"/></br>
+        <input id="uploadBigFile" class="all" type="file" name="uploadBigFile"/></br>
         <input type="submit" value="大文件切片上传" onclick="uploadBigFile()"/>
+        <input type="submit" value="大文件Socket切片上传" onclick="uploadBigFileBySocket()"/>
         <div id="detail2" style="text-align:center"></div>
     </div>
 
     <div id="green">
         <div style="width:350px;height:100px;text-align:center"><h4>视频文件上传转m3u8格式</br>并保存至OSS或minIOn</h4></div>
-        <input id = "uploadVideo" class="all" type="file" name="uploadFile"/></br>
+        <input id="uploadVideo" class="all" type="file" name="uploadFile"/></br>
         <input type="submit" value="普通上传并转码" onclick="uploadVideo()"/>
         <input type="submit" value="切片上传并转码" onclick="uploadVideoSlice()"/>
+        <input type="submit" value="Socket上传并转码" onclick="uploadVideoBySocket()"/>
+
+
         <div id="detail3" style=" width:300px;word-break:break-all; text-align:center"></div>
 
     </div>
@@ -79,7 +86,7 @@
             <video id="myVideo"
                    style="width:350px;height:350px;"
                    class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto" data-setup='{}'>
-                <source id="source" src="/test.m3u8" type="application/x-mpegURL"> </source>
+                <source id="source" src="/test.m3u8" type="application/x-mpegURL"></source>
             </video>
         </div>
     </div>
@@ -87,135 +94,5 @@
 </body>
 
 <script src="/index.js" th:src="@{/index.js}"></script>
-<script type="text/javascript">
 
-    function upload(){
-        let file = document.getElementById("uploadFile").files[0];//IE10以下不支持
-        let fd = new FormData();
-        fd.append('file', file);
-        document.getElementById("detail1").innerHTML = '文件正在上传... ...';
-        let call = function (result) {
-                let res = JSON.parse(result);
-                if (res.code == 200&&res.data !='' ){
-                    console.log(res);
-                    document.getElementById("detail1").innerHTML = '文件上传成功!</br>路径为：'+res.data;
-                }
-        }
-        request("POST", "/uploadFile", fd, call);
-
-
-    }
-    function uploadBigFile(){
-        let file = document.getElementById("uploadBigFile").files[0];//IE10以下不支持
-        let name = file.name,        //文件名
-            size = file.size;        //总大小
-        let GUID = guid();
-        let shardSize = 2 * 1024 * 1024,    //以1MB为一个分片
-            shardCount = Math.ceil(size / shardSize);  //总片数
-        let count = 0;
-        for (let i = 0; i < shardCount; ++i) {
-            //计算每一片的起始与结束位置
-            let start = i * shardSize,
-                end = Math.min(size, start + shardSize);
-            let partFile = file.slice(start, end);
-            let call = function (result) {
-                let res = JSON.parse(result);
-                if (res.code == 200){
-                    document.getElementById("detail2").innerHTML = '此次文件共切片'+shardCount+'片</br>切片上传进度：'+(i+1)+"/"+shardCount;
-                    count++;
-                }
-
-                if (count == shardCount){
-                    let call2 = function (result) {
-                        let res = JSON.parse(result);
-                        if (res.code == 200){
-                            document.getElementById("detail2").innerHTML = "切片上传成功！地址："+res.data;
-                        }
-                    }
-                    document.getElementById("detail2").innerHTML = "正在进行文件合并并上传至文件服务";
-                    mergeFile(GUID,name,"/uploadMerge","POST",call2);
-                }
-            }
-            partUpload(GUID, partFile, name, shardCount, i, "/uploadSlice", "POST",call);
-        }
-
-
-    }
-
-    function uploadVideoSlice(){
-        let file = document.getElementById("uploadVideo").files[0];//IE10以下不支持
-        let name = file.name,        //文件名
-            size = file.size;        //总大小
-        let GUID = this.guid();
-        let shardSize = 5 * 1024 * 1024,    //以1MB为一个分片
-            shardCount = Math.ceil(size / shardSize);  //总片数
-        let count = 0;
-        for (let i = 0; i < shardCount; ++i) {
-            //计算每一片的起始与结束位置
-            let start = i * shardSize,
-                end = Math.min(size, start + shardSize);
-            let partFile = file.slice(start, end);
-            let call1 = function (result){
-                let res = JSON.parse(result);
-                if (res.code == 200){
-                    document.getElementById("detail3").innerHTML = '此次文件共切片'+shardCount+'切片上传进度：'+(i+1)+"/"+shardCount;
-                    count++;
-                }
-                if (count == shardCount){
-                    document.getElementById("detail3").innerHTML = "正在进行视频合并、视频转码并转存、请耐心等待...如果觉得看不到进度，可以自己用Socket实现";
-                    let call2 = function (result) {
-                        let res = JSON.parse(result);
-                        if (res.code == 200){
-                            document.getElementById("detail3").innerHTML = "视频转码成功，且已存储！地址："+res.data;
-                            changeVideo(res.data);
-                        }
-                    }
-                    mergeFile(GUID,name,"/uploadVideoMerge","POST",call2);
-                }
-            }
-            partUpload(GUID, partFile, name, shardCount, i, "/uploadSlice", "POST",call1);
-        }
-    }
-
-    function uploadVideo(){
-        let file = document.getElementById("uploadVideo").files[0];//IE10以下不支持
-        let fd = new FormData();
-        fd.append('file', file);
-        document.getElementById("detail3").innerHTML = '视频上传中...';
-        let call = function (result) {
-            let res = JSON.parse(result)
-            if (res.code == 200&&res.data !='' ){
-                document.getElementById("detail3").innerHTML = '文件上传成功正在加载,解析后路径为路径为：'+res.data;
-                changeVideo(res.data);
-            }
-        }
-        request("POST","/uploadVideo",fd,call);
-    }
-
-
-    /**
-     * m3u8 播放器
-     */
-    let myVideo = videojs('myVideo', {
-        bigPlayButton: true,
-        textTrackDisplay: false,
-        posterImage: false,
-        errorDisplay: false,
-    })
-    myVideo.play()
-
-    let changeVideo = function (vdoSrc) {
-        if (/\.m3u8$/.test(vdoSrc)) {
-            myVideo.src({
-                src: vdoSrc,
-                type: 'application/x-mpegURL'
-            })
-        } else {
-            myVideo.src(vdoSrc)
-        }
-        myVideo.load();
-        myVideo.play();
-    }
-
-</script>
 </html>
